@@ -1,3 +1,6 @@
+# Image compression by wavelets
+# D2: Haar wavelet
+# z4p4n, NexMat
 import numpy as np
 
 d2 = np.array([
