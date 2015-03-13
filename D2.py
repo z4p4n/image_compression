@@ -4,7 +4,6 @@
 # D2: Haar wavelet
 # z4p4n, NexMat
 
-from importimage import *
 import numpy as np
 
 d2_1 = np.array([
@@ -85,17 +84,17 @@ def transformation_inverse(S4, D1, D2, D3, D4):
 
     SD3 = np.concatenate((vect, D3), axis = 0);
     print("SD3: ", SD3);
-    vect = np.dot(SD3, d2_4_inv);
+    vect = np.dot(SD3, d2_3_inv);
     print("vect3: ", vect);
 
     SD2 = np.concatenate((vect, D2), axis = 0);
     print("SD2: ", SD2);
-    vect = np.dot(SD2, d2_4_inv);
+    vect = np.dot(SD2, d2_2_inv);
     print("vect2: ", vect);
 
     SD1 = np.concatenate((vect, D1), axis = 0);
     print("SD1: ", SD1);
-    vect = np.dot(SD1, d2_4_inv);
+    vect = np.dot(SD1, d2_1_inv);
     print("vect1: ", vect);
 
 def RGB_to_YUV():
@@ -110,23 +109,3 @@ def YUV_to_RGB():
             [ 1, -0.39465, -0.58060],
             [ 1,  2.03211,  0      ]);
             
-
-if __name__ == '__main__':
-    #(width, height), Y, U, V = read_image ("imagerouge.bmp")
-    (width, height), Y, U, V = read_image("imagerouge.bmp");
-    
-    # On garde la plus grande valeur sans le reste % 16
-    size = width * height - (width * height % 16);
-    vect = np.array(Y[0:16], float);
-    S4, D1, D2, D3, D4 = transformationD2(vect);
-    transformation_inverse(S4, D1, D2, D3, D4);
-    #for i in range (size / 16) :
-    #    vect = np.array(Y[i*16:i*16+16], float)
-
-    #vect = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 11, 30, 30,  100]);
-    #transformationD2(vect);
-    #vect2 = transformationD2(vect);
-    #vect1 = transformation_inverse(vect2);
-    #print(d2_inverse);
-    #print("vect2 >>>", vect2);
-    #print("re vect1 >>>", vect1);
