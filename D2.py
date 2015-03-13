@@ -109,3 +109,7 @@ def YUV_to_RGB():
             [ 1, -0.39465, -0.58060],
             [ 1,  2.03211,  0      ]);
             
+
+if __name__ == '__main__':
+    S4, D1, D2, D3, D4 = transformationD2(vect);
+    transformation_inverse(S4, D1, D2, D3, D4);
