@@ -6,75 +6,50 @@
 
 import numpy as np
 
-d2_1 = np.array([
-	[1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0 ],
-	[1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0, 0, 0, 0, 0, 0],
-	[0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0 ],
-	[0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0, 0, 0, 0, 0],
-	[0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0 ],
-	[0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0, 0, 0, 0],
-	[0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0 ],
-	[0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0, 0, 0],
-	[0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0 ],
-	[0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0, 0],
-	[0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0 ],
-	[0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0, 0],
-	[0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2, 0 ],
-	[0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2, 0],
-	[0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, 1/2 ],
-	[0, 0, 0, 0, 0, 0, 0, 1/2, 0, 0, 0, 0, 0, 0, 0, -1/2]], float);
+#d2_1_inv = np.linalg.inv(d2_1);
+#d2_2_inv = np.linalg.inv(d2_2);
+#d2_3_inv = np.linalg.inv(d2_3);
+#d2_4_inv = np.linalg.inv(d2_4);
 
-vect = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 11, 30, 30,  100]);
+def matrixD2 (size):
+# Creation de la matrice des ondelettes de Haar
 
-d2_2 = np.array([
-    [1/2, 0, 0, 0, 1/2, 0, 0, 0 ],
-    [1/2, 0, 0, 0, -1/2, 0, 0, 0],
-    [0, 1/2, 0, 0, 0, 1/2, 0, 0 ],
-    [0, 1/2, 0, 0, 0, -1/2, 0, 0],
-    [0, 0, 1/2, 0, 0, 0, 1/2, 0 ],
-    [0, 0, 1/2, 0, 0, 0, -1/2, 0],
-    [0, 0, 0, 1/2, 0, 0, 0, 1/2 ],
-    [0, 0, 0, 1/2, 0, 0, 0, -1/2]], float);
+    matrix = []
+    for i in range (size):
+        line = []
+        for j in range (size):
+            if j < size/2 and i//2 == j:
+                line.append(1/2)
+            elif j >= size/2 and (i%2 == 0) and (i//2 == j-size/2) :
+                line.append(1/2)
+            elif j >= size/2 and (i%2 == 1) and (i//2 == j-size/2) :
+                line.append(-1/2)
+            else :
+                line.append(0)
 
-d2_3 = np.array([
-    [1/2, 0, 1/2, 0 ],
-    [1/2, 0, -1/2, 0],
-    [0, 1/2, 0, 1/2 ],
-    [0, 1/2, 0, -1/2]], float);
+        matrix.append (line)
 
-d2_4 = np.array([
-    [1/2, 1/2 ],
-    [1/2, -1/2]], float);
-
-d2_1_inv = np.linalg.inv(d2_1);
-d2_2_inv = np.linalg.inv(d2_2);
-d2_3_inv = np.linalg.inv(d2_3);
-d2_4_inv = np.linalg.inv(d2_4);
-
+    return np.array (matrix, float)
 
 def transformationD2(vect):
-    print("vect : ", vect);
-    vect = np.dot(vect, d2_1);
-    print("vect2: ", vect);
-    S1 = vect[0:8];
-    D1 = vect[8:];
+    vect = np.dot(vect, matrixD2(len(vect)));
+    S = vect[0:len(vect)//2];
+    D = vect[len(vect)//2:];
 
-    vect = np.dot(S1, d2_2);
-    print("vect3: ", vect);
-    S2 = vect[0:4];
-    D2 = vect[4:];
+    return (S, D)
 
-    vect = np.dot(S2, d2_3);
-    print("vect4: ", vect);
-    S3 = vect[0:2];
-    D3 = vect[2:];
+def compressionD2(vect):
+    vect_tmp = vect;
+    D_tab = [];
+    while True:
+        S, D = transformationD2(vect_tmp);
+        D_tab += [[i for i in D]];
+        if len(S) == 1:
+            break;
+        vect_tmp = S;
 
-    vect = np.dot(S3, d2_4);
-    print("vect5: ", vect);
-    S4 = vect[0:1];
-    D4 = vect[1:];
+    return S, D_tab;
 
-    return (S4, D1, D2, D3, D4)
 
 def transformation_inverse(S4, D1, D2, D3, D4):
     SD4 = np.concatenate((S4, D4), axis = 0);
@@ -109,7 +84,17 @@ def YUV_to_RGB():
             [ 1, -0.39465, -0.58060],
             [ 1,  2.03211,  0      ]);
             
-
 if __name__ == '__main__':
-    S4, D1, D2, D3, D4 = transformationD2(vect);
-    transformation_inverse(S4, D1, D2, D3, D4);
+
+    #print(matrixD2(2))
+    #print(matrixD2(4))
+    #print(matrixD2(6))
+    #print(matrixD2(8))
+    #print(matrixD2(16))
+
+    #S4, D1, D2, D3, D4 = transformationD2(vect);
+    vect = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 11, 30, 30,  100]);
+    S, D_tab = compressionD2(vect);
+    print(S, D_tab);
+
+    #transformation_inverse(S4, D1, D2, D3, D4);
