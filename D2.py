@@ -43,40 +43,35 @@ def compressionD2(vect):
     D_tab = [];
     while True:
         S, D = transformationD2(vect_tmp);
-        D_tab += [[i for i in D]];
+        D_tab += [D];
         if len(S) == 1:
             break;
         vect_tmp = S;
 
     return S, D_tab;
 
+def compressionD2_inverse(S, D_tab):
+    vect_tmp = np.array(S);
+    for i in range(len(D_tab) - 1, -1, -1):
+        S, D = transformationD2(vect_tmp);
+        D_tab += [];
+        if len(S) == 1:
+            break;
+        vect_tmp = S;
 
-def transformation_inverse(S4, D1, D2, D3, D4):
-    SD4 = np.concatenate((S4, D4), axis = 0);
-    print("SD4: ", SD4);
-    vect = np.dot(SD4, d2_4_inv);
-    print("vect4: ", vect);
+    return S, D_tab;
 
-    SD3 = np.concatenate((vect, D3), axis = 0);
-    print("SD3: ", SD3);
-    vect = np.dot(SD3, d2_3_inv);
-    print("vect3: ", vect);
+def transformationD2_inverse(vect):
+    D2_inv = np.linalg.inv(matrixD2(len(vect)));
+    vect = np.dot(vect, );
+    S = vect[0:len(vect)//2];
+    D = vect[len(vect)//2:];
 
-    SD2 = np.concatenate((vect, D2), axis = 0);
-    print("SD2: ", SD2);
-    vect = np.dot(SD2, d2_2_inv);
-    print("vect2: ", vect);
-
-    SD1 = np.concatenate((vect, D1), axis = 0);
-    print("SD1: ", SD1);
-    vect = np.dot(SD1, d2_1_inv);
-    print("vect1: ", vect);
+    return (S, D)
 
 def RGB_to_YUV():
     matrice = np.array(
-            [ 0.299  ,  0.587  , 0.114   ],
-            [-0.14713, -0.28886, 0.436   ],
-            [ 0.299  , -0.51498, -0.10001]);
+            [ 0.299  ,  0.587  , 0.114   ], [-0.14713, -0.28886, 0.436   ], [ 0.299  , -0.51498, -0.10001]);
 
 def YUV_to_RGB():
     matrice = np.array(
@@ -90,7 +85,7 @@ if __name__ == '__main__':
     #print(matrixD2(4))
     #print(matrixD2(6))
     #print(matrixD2(8))
-    #print(matrixD2(16))
+    #rint(matrixD2(16))
 
     #S4, D1, D2, D3, D4 = transformationD2(vect);
     vect = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 11, 30, 30,  100]);
