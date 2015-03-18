@@ -9,12 +9,18 @@ import numpy as np
 def create_image (img_name, width, height, Y, U, V):
 	# Creation de l'image
 	img = Image.new ("RGB", (width, height))
+	print(width, height);
 
 	# On retrouve les valeurs RGB a partir des couleurs YUV
 	for i in range (width * height) :
 		R, G, B = YUV_to_RGB((Y[i], U[i], V[i]))
-		img.putpixel((i/height, i%width), (int(R), int(G), int(B)))
+		#print(int(i/height), i%width, int(R), int(G), int(B))
+		try:
+			img.putpixel((int(i/height) - 1, i%width), (int(R), int(G), int(B)))
+		except:
+			print("over ranged: ", int(i/height), i%width, int(R), int(G), int(B))
 
+	
 	# Sauvegarde de l'image
 	img.save(img_name + ".bmp", "bmp")
         
