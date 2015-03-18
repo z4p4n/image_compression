@@ -8,12 +8,13 @@ import numpy as np
 
 def create_image (img_name, width, height, Y, U, V):
 	# Creation de l'image
-	img = Image.new ("RGB", (width, height))
+	print (width, " ", height)
+	img = Image.new ("RGB", (width, height), "white")
 
 	# On retrouve les valeurs RGB a partir des couleurs YUV
 	for i in range (width * height) :
 		R, G, B = YUV_to_RGB((Y[i], U[i], V[i]))
-		img.putpixel((i/height, i%width), (int(R), int(G), int(B)))
+		img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
 
 	# Sauvegarde de l'image
 	img.save(img_name + ".bmp", "bmp")
