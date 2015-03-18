@@ -1,6 +1,7 @@
 #!/usr/bin/python3.4
 
 # Compresseur
+# -> Décomposition de l'image par YUV
 # -> Suppression des 4 premiers bits des deux octets U et V representant la chrominance
 #
 # z4p4n, NexMat
@@ -21,27 +22,33 @@ if __name__ == '__main__':
 
 	(width, height), Y, U, V = read_image(img_name);
 
+	# On enleve l'extension
+	img_name = '.'.join(img_name.split('.')[:-1])
 
 	# Suppression des 4 premiers bits des deux octets U et V
 	if mode == "-c" :
 
 		for i in range (width * height) :
-			U[i] &= 0xF0
-			V[i] &= 0xF0
+			Y[i], U[i], V[i] = YUV_to_byte (Y[i], U[i], V[i])
 
-		create_image (img_name, width, height, Y, U, V)
+		# Ecrase les 4 premier bits de poids faible
+		for i in range (width * height) :
+			U[i] &= 0xF8
+			V[i] &= 0xF8
+
+		for i in range (width * height) :
+			Y[i], U[i], V[i] = byte_to_YUV (Y[i], U[i], V[i])
+
+		create_image (img_name + "_precompressed", width, height, Y, U, V)
 
 	# Option separation des Y, U et V
 	elif mode == "-s":
-		for i in range (width * height) :
-			Y[i] = ((int(Y[i]) + 128) >> 8) + 16;
-			U[i] = ((int(U[i]) + 128) >> 8) + 128;
-			V[i] = ((int(V[i]) + 128) >> 8) + 128;
 		emptymat = [0 for i in range(len(Y))];
-		create_image(img_name + "_Y", width, height, Y, emptymat, emptymat)
-		create_image(img_name + "_U", width, height, emptymat, U, emptymat)
-		create_image(img_name + "_V", width, height, emptymat, emptymat, V)
 
+		# Creation des trois images
+		create_image("YUV" + img_name + "_Y", width, height, Y, emptymat, emptymat)
+		create_image("YUV" + img_name + "_U", width, height, emptymat, U, emptymat)
+		create_image("YUV" + img_name + "_V", width, height, emptymat, emptymat, V)
 
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")
 

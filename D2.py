@@ -69,16 +69,6 @@ def transformationD2_inverse(vect):
 
     return (S, D)
 
-def RGB_to_YUV():
-    matrice = np.array(
-            [ 0.299  ,  0.587  , 0.114   ], [-0.14713, -0.28886, 0.436   ], [ 0.299  , -0.51498, -0.10001]);
-
-def YUV_to_RGB():
-    matrice = np.array(
-            [ 1,  0      ,  1.13983],
-            [ 1, -0.39465, -0.58060],
-            [ 1,  2.03211,  0      ]);
-            
 if __name__ == '__main__':
 
     #print(matrixD2(2))
