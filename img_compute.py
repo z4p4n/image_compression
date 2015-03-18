@@ -15,9 +15,8 @@ def create_image (img_name, width, height, Y, U, V):
 		R, G, B = YUV_to_RGB((Y[i], U[i], V[i]))
 		img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
 
-	
 	# Sauvegarde de l'image
-	img.save(img_name + ".bmp", "bmp")
+	img.save("YUV/" + img_name + ".bmp", "bmp")
         
 def read_image(img_name):
 	# Ouverture de l'image 
