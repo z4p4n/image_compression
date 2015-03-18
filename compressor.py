@@ -33,14 +33,18 @@ if __name__ == '__main__':
 
 	# Option separation des Y, U et V
 	elif mode == "-s":
+		#for i in range (width * height) :
+		#	Y[i] = ((int(Y[i]) + 128) >> 8) + 16;
+		#	U[i] = ((int(U[i]) + 128) >> 8) + 128;
+		#	V[i] = ((int(V[i]) + 128) >> 8) + 128;
 		for i in range (width * height) :
-			Y[i] = ((int(Y[i]) + 128) >> 8) + 16;
-			U[i] = ((int(U[i]) + 128) >> 8) + 128;
-			V[i] = ((int(V[i]) + 128) >> 8) + 128;
-		emptymat = [0 for i in range(len(Y))];
-		create_image(img_name + "_Y", width, height, Y, emptymat, emptymat)
-		create_image(img_name + "_U", width, height, emptymat, U, emptymat)
-		create_image(img_name + "_V", width, height, emptymat, emptymat, V)
+			Y[i] = int(Y[i])
+			U[i] = int(U[i])
+			V[i] = int(V[i])
+		emptymat = [255 for i in range(len(Y))];
+		create_image(img_name + "_Y", width, height, Y, emptymat, emptymat);
+		create_image(img_name + "_U", width, height, emptymat, U, emptymat);
+		create_image(img_name + "_V", width, height, emptymat, emptymat, V);
 
 
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")

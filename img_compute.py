@@ -8,7 +8,7 @@ import numpy as np
 
 def create_image (img_name, width, height, Y, U, V):
 	# Creation de l'image
-	img = Image.new ("RGB", (width, height), "white")
+	img = Image.new ("RGB", (width, height), "black")
 
 	# On retrouve les valeurs RGB a partir des couleurs YUV
 	for i in range (width * height) :
@@ -36,11 +36,10 @@ def read_image(img_name):
 	matriceV = [0 for i in range (width * height)]
 	for i in range (width) :
 		for j in range (height) :
-			Y, U, V = RGB_to_YUV(pix[i,j])
-			matriceY[i*height + j] = Y
-			matriceU[i*height + j] = U
-			matriceV[i*height + j] = V
-	#matriceY = [[RGB_to_YUV(pix[i,j])[0] for j in range(height)] for i in range(width)]
+			Y, U, V = RGB_to_YUV(pix[i,j]);
+			matriceY[i*height + j] = Y;
+			matriceU[i*height + j] = U;
+			matriceV[i*height + j] = V;
 	return ((width, height), matriceY, matriceU, matriceV);
 
 def RGB_to_YUV(triplet):
