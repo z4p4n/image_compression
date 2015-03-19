@@ -6,49 +6,92 @@
 #
 # z4p4n, NexMat
 
-import sys
+import getopt, sys
 from img_compute import *
 from D2 import *
 
+def cutfirstbit (Y, U, V, width, height, n, img_name):
+
+	for i in range (width * height) :
+		Y[i], U[i], V[i] = YUV_to_byte (Y[i], U[i], V[i])
+
+	# Ecrase les n premier bits de poids faible
+	for i in range (width * height) :
+		U[i] &= (0xFF >> n) << n
+		V[i] &= (0xFF >> n) << n
+
+	for i in range (width * height) :
+		Y[i], U[i], V[i] = byte_to_YUV (Y[i], U[i], V[i])
+
+	create_image (img_name + "_cut" + str (n) + "bit", width, height, Y, U, V, True)
+
+def splitYUV (Y, U, V, width, height, img_name):
+
+	emptymat = [0 for i in range(len(Y))];
+
+	# Creation des trois images
+	create_image("YUV/" + img_name + "_Y", width, height, Y, emptymat, emptymat, True)
+	create_image("YUV/" + img_name + "_U", width, height, emptymat, U, emptymat, True)
+	create_image("YUV/" + img_name + "_V", width, height, emptymat, emptymat, V, True)
+
+def usage ():
+	print ("Usage: TODO")
+
 if __name__ == '__main__':
 
-	# Lecture des parametres
+	# Recuperation des parametres
 	try:
-		mode = sys.argv[1]
-		img_name = sys.argv[2]
-	except:
-		print ("Usage: ...")
-		exit ()
+		opts, args = getopt.getopt(sys.argv[1:], "f:hyc:s", ["help"])
+	except getopt.GetoptError as err:
+		print (str(err))
+		usage ()
+		sys.exit (2)
 
-	(width, height), Y, U, V = read_image(img_name);
+	yuv = False
+	cut = 0
+	mode = ''
+	img_name = ''
 
-	# On enleve l'extension
+	# lecture des parametres
+	for o, a in opts:
+
+		if o == "-y":
+			yuv = True
+
+		elif o in ("-h", "--help"):
+			usage()
+			sys.exit(1)
+
+		elif o == "-c":
+			mode = "c"
+			yuv = True
+			cut = int (a)
+
+		elif o == "-s":
+			mode = "s"
+			yuv = True
+
+		elif o == "-f":
+			img_name = a
+
+	# Si il n'y a pas de fichier a lire ou pas d'option tout simplement
+	if img_name == '' or mode == '':
+		usage()
+		sys.exit(2)
+
+	# lecture de l'image
+	(width, height), X, Y, Z = read_image(img_name, yuv);
+
+	# On enleve l'extension du nom de l'image
 	img_name = '.'.join(img_name.split('.')[:-1])
 
-	# Suppression des 4 premiers bits des deux octets U et V
-	if mode == "-c" :
-
-		for i in range (width * height) :
-			Y[i], U[i], V[i] = YUV_to_byte (Y[i], U[i], V[i])
-
-		# Ecrase les 4 premier bits de poids faible
-		for i in range (width * height) :
-			U[i] &= 0xF8
-			V[i] &= 0xF8
-
-		for i in range (width * height) :
-			Y[i], U[i], V[i] = byte_to_YUV (Y[i], U[i], V[i])
-
-		create_image (img_name + "_precompressed", width, height, Y, U, V)
+	# Suppression des X premiers bits des deux chromatiques
+	if mode == "c" :
+		cutfirstbit (X, Y, Z, width, height, cut, img_name)
 
 	# Option separation des Y, U et V
-	elif mode == "-s":
-		emptymat = [0 for i in range(len(Y))];
-
-		# Creation des trois images
-		create_image("YUV" + img_name + "_Y", width, height, Y, emptymat, emptymat)
-		create_image("YUV" + img_name + "_U", width, height, emptymat, U, emptymat)
-		create_image("YUV" + img_name + "_V", width, height, emptymat, emptymat, V)
+	elif mode == "s":
+		splitYUV (X, Y, Z, width, height, img_name)
 
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")
 
