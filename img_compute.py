@@ -6,19 +6,24 @@
 from PIL import Image
 import numpy as np
 
-def create_image (img_name, width, height, Y, U, V):
+def create_image (img_name, width, height, X, Y, Z, yuv):
 	# Creation de l'image
 	img = Image.new ("RGB", (width, height), "black")
 
-	# On retrouve les valeurs RGB a partir des couleurs YUV
-	for i in range (width * height) :
-		R, G, B = YUV_to_RGB((Y[i], U[i], V[i]))
-		img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
+	if yuv == True :
+		# On retrouve les valeurs RGB a partir des couleurs YUV
+		for i in range (width * height) :
+			R, G, B = YUV_to_RGB((X[i], Y[i], Z[i]))
+			img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
+	else :
+		for i in range (width * height) :
+			img.putpixel((int (i/height), i%height), (int(X[i]), int(Y[i]), int(Z[i])))
 
 	# Sauvegarde de l'image
 	img.save(img_name + ".bmp", "bmp")
         
-def read_image(img_name):
+def read_image(img_name, yuv):
+
 	# Ouverture de l'image 
 	try:
 		img = Image.open (img_name).convert ('RGB')
@@ -30,16 +35,26 @@ def read_image(img_name):
 
 	pix = img.load();
 
+	matriceX = [0 for i in range (width * height)]
 	matriceY = [0 for i in range (width * height)]
-	matriceU = [0 for i in range (width * height)]
-	matriceV = [0 for i in range (width * height)]
-	for i in range (width) :
-		for j in range (height) :
-			Y, U, V = RGB_to_YUV(pix[i,j]);
-			matriceY[i*height + j] = Y;
-			matriceU[i*height + j] = U;
-			matriceV[i*height + j] = V;
-	return ((width, height), matriceY, matriceU, matriceV);
+	matriceZ = [0 for i in range (width * height)]
+
+	if yuv == True :
+		for i in range (width) :
+			for j in range (height) :
+				X, Y, Z = RGB_to_YUV(pix[i,j])
+				matriceX[i*height + j] = X
+				matriceY[i*height + j] = Y
+				matriceZ[i*height + j] = Z
+	else :
+		for i in range (width) :
+			for j in range (height) :
+				X, Y, Z = pix[i,j]
+				matriceX[i*height + j] = X
+				matriceY[i*height + j] = Y
+				matriceZ[i*height + j] = Z
+
+	return ((width, height), matriceX, matriceY, matriceZ);
 
 def YUV_to_byte (Y, U, V) :
 	return (((int(Y)) >> 8) + 16,((int(U)) >> 8) + 128, ((int(V)) >> 8) + 128)
