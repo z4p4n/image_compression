@@ -15,7 +15,6 @@ def create_image (img_name, width, height, Y, U, V):
 		R, G, B = YUV_to_RGB((Y[i], U[i], V[i]))
 		img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
 
-	
 	# Sauvegarde de l'image
 	img.save(img_name + ".bmp", "bmp")
         
@@ -41,6 +40,12 @@ def read_image(img_name):
 			matriceU[i*height + j] = U;
 			matriceV[i*height + j] = V;
 	return ((width, height), matriceY, matriceU, matriceV);
+
+def YUV_to_byte (Y, U, V) :
+	return (((int(Y)) >> 8) + 16,((int(U)) >> 8) + 128, ((int(V)) >> 8) + 128)
+
+def byte_to_YUV (Y, U, V) :
+	return (((Y - 16) << 8), int ((U - 128) << 8), int ((V - 128) << 8))
 
 def RGB_to_YUV(triplet):
 	vect = np.array([triplet[0], triplet[1], triplet[2]], float);
