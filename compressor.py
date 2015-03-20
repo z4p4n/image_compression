@@ -151,7 +151,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	(XfinD, YfinD, ZfinD, w, h) = inflate_vert (XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, matrix) 
 
 	print ("[+] Create new image " + str(w) + "x" + str(h))
-	create_image ("" + img_name + "_D2tmp", w, h, Xfin1, Yfin1, Zfin1, yuv)
+	create_image ("" + img_name + "_D2tmp", w, h, XfinS, YfinS, ZfinS, yuv)
 
 	# Reconstruction horizontale
 	X = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
@@ -160,22 +160,22 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 
 	for j in range (height) :
 		for i in range (0, new_width, 8) :
-			S = [XfinS[j][i:i+8]]
-			D = [XfinD[j][i:i+8]]
+			S = XfinS[j][i:i+8]
+			D = XfinD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoD2 (S, matrix)
 			S.extend (D)
 			for k in range (16): 
 				X[j][i*2 + k] = S[k]
-			S = [YfinS[j][i:i+8]]
-			D = [YfinD[j][i:i+8]]
+			S = YfinS[j][i:i+8]
+			D = YfinD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoD2 (S, matrix)
 			S.extend (D)
 			for k in range (16): 
 				Y[j][i*2 + k] = S[k]
-			S = [ZfinS[j][i:i+8]]
-			D = [ZfinD[j][i:i+8]]
+			S = ZfinS[j][i:i+8]
+			D = ZfinD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoD2 (S, matrix)
 			S.extend (D)
@@ -184,7 +184,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
 
 	print ("[+] Create new image " + str(w) + "x" + str(h))
-	create_image ("" + img_name + "_D2", w, h, Xfin1, Yfin1, Zfin1, yuv)
+	create_image ("" + img_name + "_D2", w, h, X, Y, Z, yuv)
 
 	#return (Xres2, Yres2, Zres2, new_width, new_height)
 	
