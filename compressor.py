@@ -22,22 +22,25 @@ def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 		for j in range (0, height, 8) :
 			S = [XS[j+k][i] for k in range (8)]
 			D = [XD[j+k][i] for k in range (8)]
-			V = S.extend (D)
-			V = transfoD2 (V, matrix)
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
 			for k in range (16): 
-				X[j*2+k][i] = V[k]
+				X[j*2+k][i] = S[k]
 			S = [YS[j+k][i] for k in range (8)]
 			D = [YD[j+k][i] for k in range (8)]
-			V = S.extend (D)
-			V = transfoD2 (V, matrix)
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
 			for k in range (16): 
-				Y[j*2+k][i] = V[k]
+				Y[j*2+k][i] = S[k]
 			S = [ZS[j+k][i] for k in range (8)]
 			D = [ZD[j+k][i] for k in range (8)]
-			V = S.extend (D)
-			V = transfoD2 (V, matrix)
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
 			for k in range (16): 
-				Z[j*2+k][i] = V[k]
+				Z[j*2+k][i] = S[k]
 
 	return (X, Y, Z, width, height * 2)
 			
@@ -116,32 +119,32 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	print ("[+] Filter difference with " + str (error) + " error")
 	for i in range (new_width) :
 		for j in range (new_height) :
-			if math.abs(XSres2D[j][i]) <= error :
+			if math.fabs(XSres2D[j][i]) <= error :
 				XSres2D[j][i] = 0
 				counter += 1
-			if math.abs(YSres2D[j][i]) <= error :
+			if math.fabs(YSres2D[j][i]) <= error :
 				YSres2D[j][i] = 0
 				counter += 1
-			if math.abs(ZSres2D[j][i]) <= error :
+			if math.fabs(ZSres2D[j][i]) <= error :
 				ZSres2D[j][i] = 0
 				counter += 1
-			if math.abs(XSres2D[j][i]) <= error :
+			if math.fabs(XSres2D[j][i]) <= error :
 				XDres2D[j][i] = 0
 				counter += 1
-			if math.abs(YSres2D[j][i]) <= error :
+			if math.fabs(YSres2D[j][i]) <= error :
 				YDres2D[j][i] = 0
 				counter += 1
-			if math.abs(ZSres2D[j][i]) <= error :
+			if math.fabs(ZSres2D[j][i]) <= error :
 				ZDres2D[j][i] = 0
 				counter += 1
 
-	print ("[?] Number of filtered value " + counter)
+	print ("[?] Number of filtered value " + str (counter))
 
 	print ("[+] Rebuild image")
 	matrix = matrixDN_inv (matrix)
-	(Xfin1, Yfin1, Zfin1, w, h) = inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
-	#print ("[+] Create new image " + str(new_width) + "x" + str(new_height))
-	#create_image ("Divide/" + img_name + "_div", new_width, new_height, Xres2, Yres2, Zres2, yuv)
+	(Xfin1, Yfin1, Zfin1, w, h) = inflate_vert (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, new_width, new_height, matrix) 
+	print ("[+] Create new image " + str(w) + "x" + str(h))
+	create_image ("" + img_name + "_D2", w, h, Xfin1, Yfin1, Zfin1, yuv)
 
 	#return (Xres2, Yres2, Zres2, new_width, new_height)
 	
@@ -251,7 +254,7 @@ if __name__ == '__main__':
 
 	yuv = False
 	cut = 0
-	err = 0
+	error = 0
 	mode = ''
 	degre = 0
 	img_name = ''
