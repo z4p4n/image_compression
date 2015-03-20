@@ -11,9 +11,14 @@ import getopt, sys
 from img_compute import *
 from D2 import *
 
-def divide (X, Y, Z, width, height, img_name, divide, deflate, yuv) :
+def divide (X, Y, Z, width, height, img_name, deflate, yuv) :
 
-	print ("[+] Divide image per " + str (i))
+	i = 2
+	# On divise l'image tant qu'on peut
+	while (width > 16 and height > 16) :
+		print ("[+] Divide image per " + str (i))
+		i += 1
+		(X, Y, Z, width, height) = divide_img (X, Y, Z, width, height, img_name + "_" + str(i), deflate, yuv)
 
 def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 
@@ -57,8 +62,11 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 		if i % 100 == 0 : print ("[!] processing... " + str (i) + "/" + str(new_width) + "  ")
 
-	print ("[+] Create new image " + str(new_width) + "x" + str(new_height//2))
-	create_image ("Divide/" + img_name + "_div" + str (divide), new_width, new_height//2, Xres2, Yres2, Zres2, yuv)
+	new_height = new_height // 2
+	print ("[+] Create new image " + str(new_width) + "x" + str(new_height))
+	create_image ("Divide/" + img_name + "_div", new_width, new_height, Xres2, Yres2, Zres2, yuv)
+
+	return (Xres2, Yres2, Zres2, new_width, new_height)
 
 def cutfirstbit (Y, U, V, width, height, n, img_name):
 
@@ -101,7 +109,7 @@ if __name__ == '__main__':
 
 	# Recuperation des parametres
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "d:f:hyc:s", ["help", "d2"])
+		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:s", ["help", "d2"])
 	except getopt.GetoptError as err:
 		print (str(err))
 		usage ()
@@ -109,7 +117,6 @@ if __name__ == '__main__':
 
 	yuv = False
 	cut = 0
-	divide = 0
 	mode = ''
 	img_name = ''
 	deflate = 'd2'
@@ -148,7 +155,6 @@ if __name__ == '__main__':
 		# Division de l'image
 		elif o == "-d":
 			mode = "d"
-			divide = int (a)
 
 	# Si il n'y a pas de fichier a lire ou pas d'option tout simplement
 	if img_name == '' or mode == '':
@@ -171,7 +177,7 @@ if __name__ == '__main__':
 		splitYUV (X, Y, Z, width, height, img_name)
 
 	elif mode == "d":
-		divide (X, Y, Z, width, height, img_name, divide, deflate, yuv)
+		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 		
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")
 

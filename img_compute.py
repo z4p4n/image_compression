@@ -41,7 +41,9 @@ def read_image(img_name, yuv):
 	matriceY = [[0 for i in range (width)] for j in range (height)]
 	matriceZ = [[0 for i in range (width)] for j in range (height)]
 
+	print ("yuv", yuv)
 	if yuv == True :
+		print ("lksdlfkjqsldjkf")
 		for i in range (width) :
 			for j in range (height) :
 				X, Y, Z = RGB_to_YUV(pix[i,j])
