@@ -12,12 +12,14 @@ def create_image (img_name, width, height, X, Y, Z, yuv):
 
 	if yuv == True :
 		# On retrouve les valeurs RGB a partir des couleurs YUV
-		for i in range (width * height) :
-			R, G, B = YUV_to_RGB((X[i], Y[i], Z[i]))
-			img.putpixel((int (i/height), i%height), (int(R), int(G), int(B)))
+		for i in range (width) :
+			for j in range (height) :
+				R, G, B = YUV_to_RGB((X[j][i], Y[j][i], Z[j][i]))
+				img.putpixel((i, j), (int(R), int(G), int(B)))
 	else :
-		for i in range (width * height) :
-			img.putpixel((int (i/height), i%height), (int(X[i]), int(Y[i]), int(Z[i])))
+		for i in range (width) :
+			for j in range (height) :
+				img.putpixel((i, j), (int(X[j][i]), int(Y[j][i]), int(Z[j][i])))
 
 	# Sauvegarde de l'image
 	img.save(img_name + ".bmp", "bmp")
@@ -35,24 +37,24 @@ def read_image(img_name, yuv):
 
 	pix = img.load();
 
-	matriceX = [0 for i in range (width * height)]
-	matriceY = [0 for i in range (width * height)]
-	matriceZ = [0 for i in range (width * height)]
+	matriceX = [[0 for i in range (width)] for j in range (height)]
+	matriceY = [[0 for i in range (width)] for j in range (height)]
+	matriceZ = [[0 for i in range (width)] for j in range (height)]
 
 	if yuv == True :
 		for i in range (width) :
 			for j in range (height) :
 				X, Y, Z = RGB_to_YUV(pix[i,j])
-				matriceX[i*height + j] = X
-				matriceY[i*height + j] = Y
-				matriceZ[i*height + j] = Z
+				matriceX[j][i] = X
+				matriceY[j][i] = Y
+				matriceZ[j][i] = Z
 	else :
 		for i in range (width) :
 			for j in range (height) :
 				X, Y, Z = pix[i,j]
-				matriceX[i*height + j] = X
-				matriceY[i*height + j] = Y
-				matriceZ[i*height + j] = Z
+				matriceX[j][i] = X
+				matriceY[j][i] = Y
+				matriceZ[j][i] = Z
 
 	return ((width, height), matriceX, matriceY, matriceZ);
 
