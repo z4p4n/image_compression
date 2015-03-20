@@ -140,9 +140,49 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 
 	print ("[?] Number of filtered value " + str (counter))
 
+	# Reconstruction de l'image
 	print ("[+] Rebuild image")
 	matrix = matrixDN_inv (matrix)
-	(Xfin1, Yfin1, Zfin1, w, h) = inflate_vert (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, new_width, new_height, matrix) 
+
+	# Reconstruction verticale
+	print ("[+] Inflate verticaly - Average")
+	(XfinS, YfinS, ZfinS, w, h) = inflate_vert (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, new_width, new_height, matrix) 
+	print ("[+] Inflate verticaly - Difference")
+	(XfinD, YfinD, ZfinD, w, h) = inflate_vert (XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, matrix) 
+
+	print ("[+] Create new image " + str(w) + "x" + str(h))
+	create_image ("" + img_name + "_D2tmp", w, h, Xfin1, Yfin1, Zfin1, yuv)
+
+	# Reconstruction horizontale
+	X = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
+	Y = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
+	Z = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
+
+	for j in range (height) :
+		for i in range (0, new_width, 8) :
+			S = [XfinS[j][i:i+8]]
+			D = [XfinD[j][i:i+8]]
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
+			for k in range (16): 
+				X[j][i*2 + k] = S[k]
+			S = [YfinS[j][i:i+8]]
+			D = [YfinD[j][i:i+8]]
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
+			for k in range (16): 
+				Y[j][i*2 + k] = S[k]
+			S = [ZfinS[j][i:i+8]]
+			D = [ZfinD[j][i:i+8]]
+			S.extend (D)
+			S, D = transfoD2 (S, matrix)
+			S.extend (D)
+			for k in range (16): 
+				Z[j][i*2 + k] = S[k]
+		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
+
 	print ("[+] Create new image " + str(w) + "x" + str(h))
 	create_image ("" + img_name + "_D2", w, h, Xfin1, Yfin1, Zfin1, yuv)
 
