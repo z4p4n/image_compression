@@ -2,7 +2,7 @@
 
 # Compresseur
 # -> Décomposition de l'image par YUV
-# -> Suppression des 4 premiers bits des deux octets U et V representant la chrominance
+# -> Suppression des 4 premiers bits des deux octets U et V representants la chrominance
 #
 # z4p4n, NexMat
 
@@ -90,7 +90,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	YresD = [[] for i in range (height)]
 	ZresD = [[] for i in range (height)]
 
-	print ("[+] Apply D2 on image - horizontaly")
+	print ("[+] Apply D2 on image - horizontally")
 	for j in range (height) :
 		for i in range (0, new_width, 16) :
 
@@ -107,9 +107,9 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 
 	new_width = new_width // 2
 	# On divise l'image dans le sens de la hauteur avec  la methode deflate
-	print ("[+] Apply D2 on image - verticaly - Average")
+	print ("[+] Apply D2 on image - vertically - Average")
 	(XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D) = compression_vert (XresS, YresS, ZresS, new_width, new_height, matrix)
-	print ("[+] Apply D2 on image - horizontaly - Difference") 
+	print ("[+] Apply D2 on image - horizontally - Difference") 
 	(XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D) = compression_vert (XresD, YresD, ZresD, new_width, new_height, matrix)
 
 	new_height = new_height // 2
@@ -145,9 +145,9 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	matrix = matrixDN_inv (matrix)
 
 	# Reconstruction verticale
-	print ("[+] Inflate verticaly - Average")
+	print ("[+] Inflate vertically - Average")
 	(XfinS, YfinS, ZfinS, w, h) = inflate_vert (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, new_width, new_height, matrix) 
-	print ("[+] Inflate verticaly - Difference")
+	print ("[+] Inflate vertically - Difference")
 	(XfinD, YfinD, ZfinD, w, h) = inflate_vert (XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, matrix) 
 
 	print ("[+] Create new image " + str(w) + "x" + str(h))
@@ -211,7 +211,7 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 	Yres = [[] for i in range (height)]
 	Zres = [[] for i in range (height)]
 
-	print ("[+] Apply D2 on image - horizontaly")
+	print ("[+] Apply D2 on image - horizontally")
 	for j in range (height) :
 		for i in range (0, new_width, 16) :
 
@@ -222,7 +222,7 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	new_width = new_width // 2
 	# On divise l'image dans le sens de la hauteur avec  la methode deflate
-	print ("[+] Apply D2 on image - verticaly")
+	print ("[+] Apply D2 on image - vertically")
 	Xres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
 	Yres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
 	Zres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
@@ -280,7 +280,7 @@ def splitYUV (Y, U, V, width, height, img_name):
 	create_image("YUV/" + img_name + "_V", width, height, emptymat, emptymat, V, True)
 
 def usage ():
-	print ("Usage: TODO")
+	print ("Usage: python3 compressor.py [df:hyc:se:]")
 
 if __name__ == '__main__':
 
