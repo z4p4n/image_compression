@@ -11,14 +11,94 @@ import getopt, sys
 from img_compute import *
 from D2 import *
 
+def compression_vert (X, Y, Z, width, height, matrix) :
+
+	XresS = [[0 for i in range (width)] for j in range (height//2)]
+	YresS = [[0 for i in range (width)] for j in range (height//2)]
+	ZresS = [[0 for i in range (width)] for j in range (height//2)]
+	XresD = [[0 for i in range (width)] for j in range (height//2)]
+	YresD = [[0 for i in range (width)] for j in range (height//2)]
+	ZresD = [[0 for i in range (width)] for j in range (height//2)]
+
+	for i in range (width) :
+		for j in range (0, height, 16) :
+
+			(S, D) = transfoD2 ([X[j+k][i] for k in range (0, 16)], matrix)
+			for k in range (8): 
+				XresS[j//2+k][i] = S[k]
+				XresD[j//2+k][i] = S[k]
+			(S, D) = transfoD2 ([Y[j+k][i] for k in range (0, 16)], matrix)
+			for k in range (8): 
+				YresS[j//2+k][i] = S[k]
+				YresD[j//2+k][i] = S[k]
+			(S, D) = transfoD2 ([Z[j+k][i] for k in range (0, 16)], matrix)
+			for k in range (8): 
+				ZresS[j//2+k][i] = S[k]
+				ZresD[j//2+k][i] = S[k]
+		if i % 100 == 0 : print ("[!] processing... " + str (i) + "/" + str(width) + "  ")
+
+	return (XresS, YresS, ZresS, XresD, YresD, ZresD)
+
+
+def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre) :
+
+	# Pour le moment on fait facile modulo 16 bits TODO
+	new_width  = width  - width % 16
+	new_height = height - height % 16
+
+	# Creation de la matrice avec la methode deflate TODO
+	matrix = matrixD2(16)
+
+	# On divise l'image dans le sens de la largeur avec la methode deflate
+	XresS = [[] for i in range (height)]
+	YresS = [[] for i in range (height)]
+	ZresS = [[] for i in range (height)]
+	XresD = [[] for i in range (height)]
+	YresD = [[] for i in range (height)]
+	ZresD = [[] for i in range (height)]
+
+	print ("[+] Apply D2 on image - horizontaly")
+	for j in range (height) :
+		for i in range (0, new_width, 16) :
+
+			(S, D) = transfoD2 (X[j][i:i+16], matrix)
+			XresS[j].extend (S)
+			XresD[j].extend (D)
+			(S, D) = transfoD2 (Y[j][i:i+16], matrix)
+			YresS[j].extend (S)
+			YresD[j].extend (D)
+			(S, D) = transfoD2 (Z[j][i:i+16], matrix)
+			ZresS[j].extend (S)
+			ZresD[j].extend (D)
+		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
+
+	new_width = new_width // 2
+	# On divise l'image dans le sens de la hauteur avec  la methode deflate
+	print ("[+] Apply D2 on image - verticaly - Average")
+	(XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D) = compression_vert (XresS, YresS, ZresS, new_width, new_height, matrix)
+	print ("[+] Apply D2 on image - horizontaly - Difference") 
+	(XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D) = compression_vert (XresD, YresD, ZresD, new_width, new_height, matrix)
+
+	new_height = new_height // 2
+
+	# Filtrage des differences
+	for i in range (new_width) :
+		for j in range (new_height) :
+			print (XSres2D[j][i], YSres2D[j][i], ZSres2D[j][i], XDres2D[j][i], YDres2D[j][i], ZDres2D[j][i])
+
+	#print ("[+] Create new image " + str(new_width) + "x" + str(new_height))
+	#create_image ("Divide/" + img_name + "_div", new_width, new_height, Xres2, Yres2, Zres2, yuv)
+
+	#return (Xres2, Yres2, Zres2, new_width, new_height)
+	
 def divide (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	i = 2
 	# On divise l'image tant qu'on peut
 	while (width > 16 and height > 16) :
 		print ("[+] Divide image per " + str (i))
-		i += 1
 		(X, Y, Z, width, height) = divide_img (X, Y, Z, width, height, img_name + "_" + str(i), deflate, yuv)
+		i += 1
 
 def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 
@@ -26,10 +106,10 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 	new_width  = width  - width % 16
 	new_height = height - height % 16
 
-	# Creation de la matrice D2
+	# Creation de la matrice avec la methode deflate TODO
 	matrix = matrixD2_light(16)
 
-	# On divise l'image dans le sens de la largeur avec D2
+	# On divise l'image dans le sens de la largeur avec la methode deflate
 	Xres = [[] for i in range (height)]
 	Yres = [[] for i in range (height)]
 	Zres = [[] for i in range (height)]
@@ -44,7 +124,7 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
 
 	new_width = new_width // 2
-	# On divise l'image dans le sens de la hauteur avec D2
+	# On divise l'image dans le sens de la hauteur avec  la methode deflate
 	print ("[+] Apply D2 on image - verticaly")
 	Xres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
 	Yres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
@@ -109,7 +189,7 @@ if __name__ == '__main__':
 
 	# Recuperation des parametres
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:s", ["help", "d2"])
+		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:s", ["help", "d2", "d4"])
 	except getopt.GetoptError as err:
 		print (str(err))
 		usage ()
@@ -118,6 +198,7 @@ if __name__ == '__main__':
 	yuv = False
 	cut = 0
 	mode = ''
+	degre = 0
 	img_name = ''
 	deflate = 'd2'
 
@@ -134,8 +215,8 @@ if __name__ == '__main__':
 			sys.exit(1)
 
 		# Mode de coupure des n derniers bits
-		elif o == "-c":
-			mode = "c"
+		elif o == "-b":
+			mode = "b"
 			yuv = True
 			cut = int (a)
 
@@ -148,9 +229,17 @@ if __name__ == '__main__':
 		elif o == "-f":
 			img_name = a
 
+		# Compression du fichier
+		elif o == "-c":
+			mode = "c"
+			degre = a
+
 		# Methode de compression :
 		elif o == "--d2":
 			deflate = 'd2'
+
+		elif o == "--d4":
+			deflate = 'd4'
 
 		# Division de l'image
 		elif o == "-d":
@@ -169,7 +258,7 @@ if __name__ == '__main__':
 	img_name = '.'.join(img_name.split('.')[:-1])
 
 	# Suppression des X premiers bits des deux chromatiques
-	if mode == "c" :
+	if mode == "b" :
 		cutfirstbit (X, Y, Z, width, height, cut, img_name)
 
 	# Option separation des Y, U et V
@@ -178,6 +267,9 @@ if __name__ == '__main__':
 
 	elif mode == "d":
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
+
+	elif mode == "c":
+		compression (X, Y, Z, width, height, img_name, deflate, yuv, degre)
 		
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")
 

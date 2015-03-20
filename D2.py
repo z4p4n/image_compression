@@ -50,11 +50,10 @@ def transfoD2_light(vect, matrix):
 	res = np.dot(np.array(vect), matrix)
 	return np.array(res).reshape(-1,).tolist()
 
-def transformationD2(vect):
-	vect = np.dot(vect, matrixD2(len(vect)));
-	S = vect[0:len(vect)//2];
-	D = vect[len(vect)//2:];
-
+def transfoD2(vect, matrix):
+	vect = np.dot(vect, matrix);
+	S = np.array(vect[0:len(vect)//2]).reshape(-1,).tolist()
+	D = np.array(vect[len(vect)//2:]).reshape(-1,).tolist()
 	return (S, D)
 
 def compressionD2(vect):
