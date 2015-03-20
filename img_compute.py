@@ -8,7 +8,7 @@ import numpy as np
 
 def create_image (img_name, width, height, X, Y, Z, yuv):
 	# Creation de l'image
-	img = Image.new ("RGB", (width, height), "white")
+	img = Image.new ("RGB", (width, height), "black")
 
 	if yuv == True :
 		# On retrouve les valeurs RGB a partir des couleurs YUV
