@@ -14,9 +14,9 @@ from D2 import *
 
 def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 
-	X = [[0 for i in range (width * 2)] for j in range (height * 2)]
-	Y = [[0 for i in range (width * 2)] for j in range (height * 2)]
-	Z = [[0 for i in range (width * 2)] for j in range (height * 2)]
+	X = [[0 for i in range (width)] for j in range (height * 2)]
+	Y = [[0 for i in range (width)] for j in range (height * 2)]
+	Z = [[0 for i in range (width)] for j in range (height * 2)]
 
 	for i in range (width) :
 		for j in range (0, height, 8) :
@@ -59,15 +59,15 @@ def compression_vert (X, Y, Z, width, height, matrix) :
 			(S, D) = transfoD2 ([X[j+k][i] for k in range (0, 16)], matrix)
 			for k in range (8): 
 				XresS[j//2+k][i] = S[k]
-				XresD[j//2+k][i] = S[k]
+				XresD[j//2+k][i] = D[k]
 			(S, D) = transfoD2 ([Y[j+k][i] for k in range (0, 16)], matrix)
 			for k in range (8): 
 				YresS[j//2+k][i] = S[k]
-				YresD[j//2+k][i] = S[k]
+				YresD[j//2+k][i] = D[k]
 			(S, D) = transfoD2 ([Z[j+k][i] for k in range (0, 16)], matrix)
 			for k in range (8): 
 				ZresS[j//2+k][i] = S[k]
-				ZresD[j//2+k][i] = S[k]
+				ZresD[j//2+k][i] = D[k]
 		if i % 100 == 0 : print ("[!] processing... " + str (i) + "/" + str(width) + "  ")
 
 	return (XresS, YresS, ZresS, XresD, YresD, ZresD)
@@ -151,7 +151,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	(XfinD, YfinD, ZfinD, w, h) = inflate_vert (XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, matrix) 
 
 	print ("[+] Create new image " + str(w) + "x" + str(h))
-	create_image ("" + img_name + "_D2tmp", w, h, XfinS, YfinS, ZfinS, yuv)
+	create_image ("" + img_name + "_D2tmp_" + str(error), w, h, XfinS, YfinS, ZfinS, yuv)
 
 	# Reconstruction horizontale
 	X = [[0 for i in range (w * 2)] for j in range (h)]
@@ -184,7 +184,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
 
 	print ("[+] Create new image " + str(w * 2) + "x" + str(h))
-	create_image ("" + img_name + "_D2", w * 2, h, X, Y, Z, yuv)
+	create_image ("" + img_name + "_D2_" + str(error), w * 2, h, X, Y, Z, yuv)
 
 	#return (Xres2, Yres2, Zres2, new_width, new_height)
 	
