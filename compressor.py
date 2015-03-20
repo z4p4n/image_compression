@@ -154,12 +154,12 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 	create_image ("" + img_name + "_D2tmp", w, h, XfinS, YfinS, ZfinS, yuv)
 
 	# Reconstruction horizontale
-	X = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
-	Y = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
-	Z = [[0 for i in range (new_width * 2)] for j in range (new_height * 2)]
+	X = [[0 for i in range (w * 2)] for j in range (h)]
+	Y = [[0 for i in range (w * 2)] for j in range (h)]
+	Z = [[0 for i in range (w * 2)] for j in range (h)]
 
-	for j in range (height) :
-		for i in range (0, new_width, 8) :
+	for j in range (h) :
+		for i in range (0, w, 8) :
 			S = XfinS[j][i:i+8]
 			D = XfinD[j][i:i+8]
 			S.extend (D)
@@ -183,8 +183,8 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 				Z[j][i*2 + k] = S[k]
 		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
 
-	print ("[+] Create new image " + str(w) + "x" + str(h))
-	create_image ("" + img_name + "_D2", w, h, X, Y, Z, yuv)
+	print ("[+] Create new image " + str(w * 2) + "x" + str(h))
+	create_image ("" + img_name + "_D2", w * 2, h, X, Y, Z, yuv)
 
 	#return (Xres2, Yres2, Zres2, new_width, new_height)
 	
