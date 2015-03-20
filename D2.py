@@ -6,6 +6,9 @@
 
 import numpy as np
 
+def matrixDN_inv (matrix):
+	return np.linalg.inv(matrix);
+
 def matrixD2_light (size):
 # Creation de la matrice des ondelettes de Haar allegee
 

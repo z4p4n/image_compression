@@ -6,11 +6,41 @@
 #
 # z4p4n, NexMat
 
+import math
 import numpy as np
 import getopt, sys
 from img_compute import *
 from D2 import *
 
+def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
+
+	X = [[0 for i in range (width * 2)] for j in range (height * 2)]
+	Y = [[0 for i in range (width * 2)] for j in range (height * 2)]
+	Z = [[0 for i in range (width * 2)] for j in range (height * 2)]
+
+	for i in range (width) :
+		for j in range (0, height, 8) :
+			S = [XS[j+k][i] for k in range (8)]
+			D = [XD[j+k][i] for k in range (8)]
+			V = S.extend (D)
+			V = transfoD2 (V, matrix)
+			for k in range (16): 
+				X[j*2+k][i] = V[k]
+			S = [YS[j+k][i] for k in range (8)]
+			D = [YD[j+k][i] for k in range (8)]
+			V = S.extend (D)
+			V = transfoD2 (V, matrix)
+			for k in range (16): 
+				Y[j*2+k][i] = V[k]
+			S = [ZS[j+k][i] for k in range (8)]
+			D = [ZD[j+k][i] for k in range (8)]
+			V = S.extend (D)
+			V = transfoD2 (V, matrix)
+			for k in range (16): 
+				Z[j*2+k][i] = V[k]
+
+	return (X, Y, Z, width, height * 2)
+			
 def compression_vert (X, Y, Z, width, height, matrix) :
 
 	XresS = [[0 for i in range (width)] for j in range (height//2)]
@@ -40,7 +70,7 @@ def compression_vert (X, Y, Z, width, height, matrix) :
 	return (XresS, YresS, ZresS, XresD, YresD, ZresD)
 
 
-def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre) :
+def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, err) :
 
 	# Pour le moment on fait facile modulo 16 bits TODO
 	new_width  = width  - width % 16
@@ -82,10 +112,34 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, degre) :
 	new_height = new_height // 2
 
 	# Filtrage des differences
+	counter = 0
+	print ("[+] Filter difference with " + str (error) + " error")
 	for i in range (new_width) :
 		for j in range (new_height) :
-			print (XSres2D[j][i], YSres2D[j][i], ZSres2D[j][i], XDres2D[j][i], YDres2D[j][i], ZDres2D[j][i])
+			if math.abs(XSres2D[j][i]) <= error :
+				XSres2D[j][i] = 0
+				counter += 1
+			if math.abs(YSres2D[j][i]) <= error :
+				YSres2D[j][i] = 0
+				counter += 1
+			if math.abs(ZSres2D[j][i]) <= error :
+				ZSres2D[j][i] = 0
+				counter += 1
+			if math.abs(XSres2D[j][i]) <= error :
+				XDres2D[j][i] = 0
+				counter += 1
+			if math.abs(YSres2D[j][i]) <= error :
+				YDres2D[j][i] = 0
+				counter += 1
+			if math.abs(ZSres2D[j][i]) <= error :
+				ZDres2D[j][i] = 0
+				counter += 1
 
+	print ("[?] Number of filtered value " + counter)
+
+	print ("[+] Rebuild image")
+	matrix = matrixDN_inv (matrix)
+	(Xfin1, Yfin1, Zfin1, w, h) = inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 	#print ("[+] Create new image " + str(new_width) + "x" + str(new_height))
 	#create_image ("Divide/" + img_name + "_div", new_width, new_height, Xres2, Yres2, Zres2, yuv)
 
@@ -189,7 +243,7 @@ if __name__ == '__main__':
 
 	# Recuperation des parametres
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:s", ["help", "d2", "d4"])
+		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:se:", ["help", "d2", "d4"])
 	except getopt.GetoptError as err:
 		print (str(err))
 		usage ()
@@ -197,6 +251,7 @@ if __name__ == '__main__':
 
 	yuv = False
 	cut = 0
+	err = 0
 	mode = ''
 	degre = 0
 	img_name = ''
@@ -232,14 +287,18 @@ if __name__ == '__main__':
 		# Compression du fichier
 		elif o == "-c":
 			mode = "c"
-			degre = a
+			degre = int (a)
 
-		# Methode de compression :
+		# Methode de compression 
 		elif o == "--d2":
 			deflate = 'd2'
 
 		elif o == "--d4":
 			deflate = 'd4'
+
+		# Niveau d'erreur
+		elif o == "-e":
+			error = int (a)
 
 		# Division de l'image
 		elif o == "-d":
@@ -269,7 +328,7 @@ if __name__ == '__main__':
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 
 	elif mode == "c":
-		compression (X, Y, Z, width, height, img_name, deflate, yuv, degre)
+		compression (X, Y, Z, width, height, img_name, deflate, yuv, degre, error)
 		
 	#(width, height), Y, U, V = read_image ("imagerouge.bmp")
 
