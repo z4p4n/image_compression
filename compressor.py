@@ -78,15 +78,22 @@ def compression_vert (X, Y, Z, width, height, matrix) :
 def compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, err) :
 # On renvoie les donnees a compression
 
+	# Enregistrement des donnees de compression
+	donnees = []
+
 	# Compression de l'image
-	#for i in range(depth):
-	X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height = compression (X, Y, Z, width, height, img_name, deflate, yuv, err)
+	for i in range(depth):
+		X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height = compression (X, Y, Z, width, height, img_name, deflate, yuv, err)
 
-	# Decompression de l'image
-	X, Y, Z, width, height = decompression (X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height, img_name, deflate, yuv, err)
+		donnees.append((X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height))
 
-	print ("[+] Create new image " + str(width) + "x" + str(height))
-	create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P" + str(depth), width, height, X, Y, Z, yuv)
+		# Decompression de l'image
+		X2, Y2, Z2, width2, height2 = decompression (X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height, img_name, deflate, yuv, err)
+
+		print ("[+] Create new image " + str(width2) + "x" + str(height2))
+		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth) + "." + str(i), width2, height2, X2, Y2, Z2, yuv)
+
+	return donnees
 
 
 def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
@@ -95,7 +102,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 	new_width  = width  - width % 16
 	new_height = height - height % 16
 
-	# Creation de la matrice avec la methode deflate TODO
+	# Creation de la matrice avec la methode deflate
 	matrix = matrixDN(deflate, 16)
 
 	# On divise l'image dans le sens de la largeur avec la methode deflate
@@ -234,7 +241,6 @@ def decompression (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, XDres2S
 	return (X, Y, Z, w * 2, h)
 
 
-
 def divide (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	i = 2
@@ -330,7 +336,7 @@ def splitYUV (Y, U, V, width, height, img_name):
 
 
 def usage ():
-	print ("Usage: python3 compressor.py [df:hyc:se:]")
+	print("Usage: python3 compressor.py [df:hyc:se:]")
 
 
 if __name__ == '__main__':
@@ -422,5 +428,5 @@ if __name__ == '__main__':
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 
 	elif mode == "c":
-		compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		donnees = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
 
