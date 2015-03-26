@@ -103,9 +103,13 @@ def compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, err)
 		X, Y, Z, width, height = decompression (X, Y, Z, data[i][0], data[i][1], img_name, deflate, yuv, err)
 
 		print ("[+] Create new image " + str(width) + "x" + str(height))
-		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth) + "." + str(i), width, height, X, Y, Z, yuv)
+		format = ''
+		if (yuv == True) : format = 'yuv' 
+		else : format = 'rgb'
+		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth + 1) + "." + str(i) + "_" + format, width, height, X, Y, Z, yuv)
 
 	print ("\n[?] Compressed pixels : " + str (counter))
+
 def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 
 	# Pour le moment on fait facile modulo 16 bits TODO
@@ -153,7 +157,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 	if deflate == 2:
 		for i in range (new_width) :
 			for j in range (new_height) :
-				if math.fabs(XSD[j][i]) <= error :
+				if math.fabs(XSD[j][i]) <= error and yuv == False:
 					XSD[j][i] = 0
 					counter += 1
 				if math.fabs(YSD[j][i]) <= error :
@@ -162,7 +166,7 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 				if math.fabs(ZSD[j][i]) <= error :
 					ZSD[j][i] = 0
 					counter += 1
-				if math.fabs(XDD[j][i]) <= error :
+				if math.fabs(XDD[j][i]) <= error and yuv == False:
 					XDD[j][i] = 0
 					counter += 1
 				if math.fabs(YDD[j][i]) <= error :
