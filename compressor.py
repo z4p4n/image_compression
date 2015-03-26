@@ -42,6 +42,7 @@ def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 			S.extend (D)
 			for k in range (16): 
 				Z[j*2+k][i] = S[k]
+		if i % 100 == 0 : print ("    processing... " + str (i) + "/" + str(width) + "  ")
 
 	return (X, Y, Z, width, height * 2)
 			
@@ -70,7 +71,7 @@ def compression_vert (X, Y, Z, width, height, matrix) :
 			for k in range (8): 
 				ZresS[j//2+k][i] = S[k]
 				ZresD[j//2+k][i] = D[k]
-		if i % 100 == 0 : print ("[!] processing... " + str (i) + "/" + str(width) + "  ")
+		if i % 100 == 0 : print ("    processing... " + str (i) + "/" + str(width) + "  ")
 
 	return (XresS, YresS, ZresS, XresD, YresD, ZresD)
 
@@ -78,24 +79,33 @@ def compression_vert (X, Y, Z, width, height, matrix) :
 def compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, err) :
 # On renvoie les donnees a compression
 
+	# Compteur de compression
+	counter = 0
+
+	print ("\n{ Deflate image }")
+
 	# Enregistrement des donnees de compression
-	donnees = []
+	data = []
 
 	# Compression de l'image
 	for i in range(depth):
-		X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height = compression (X, Y, Z, width, height, img_name, deflate, yuv, err)
+		print ("\n{Round " + str (i) + "}")
+		X, Y, Z, img_diff, width, height, gain = compression (X, Y, Z, width, height, img_name, deflate, yuv, err)
 
-		donnees.append((X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height))
+		# Sauvegarde du nombre de pixels compressees
+		counter += gain
 
-		# Decompression de l'image
-		X2, Y2, Z2, width2, height2 = decompression (X, Y, Z, XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD, width, height, img_name, deflate, yuv, err)
+		data.append([img_diff, (width, height)])
 
-		print ("[+] Create new image " + str(width2) + "x" + str(height2))
-		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth) + "." + str(i), width2, height2, X2, Y2, Z2, yuv)
+	# Decompression de l'image
+	for i in range (depth - 1, -1, -1):
 
-	return donnees
+		X, Y, Z, width, height = decompression (X, Y, Z, data[i][0], data[i][1], img_name, deflate, yuv, err)
 
+		print ("[+] Create new image " + str(width) + "x" + str(height))
+		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth) + "." + str(i), width, height, X, Y, Z, yuv)
 
+	print ("\n[?] Compressed pixels : " + str (counter))
 def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 
 	# Pour le moment on fait facile modulo 16 bits TODO
@@ -106,34 +116,34 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 	matrix = matrixDN(deflate, 16)
 
 	# On divise l'image dans le sens de la largeur avec la methode deflate
-	XresS = [[] for i in range (height)]
-	YresS = [[] for i in range (height)]
-	ZresS = [[] for i in range (height)]
-	XresD = [[] for i in range (height)]
-	YresD = [[] for i in range (height)]
-	ZresD = [[] for i in range (height)]
+	XS = [[] for i in range (height)]
+	YS = [[] for i in range (height)]
+	ZS = [[] for i in range (height)]
+	XD = [[] for i in range (height)]
+	YD = [[] for i in range (height)]
+	ZD = [[] for i in range (height)]
 
 	print ("[+] Apply D" + str(deflate) + " on image - horizontally")
 	for j in range (height) :
 		for i in range (0, new_width, 16) :
 
 			(S, D) = transfoDN (X[j][i:i+16], matrix)
-			XresS[j].extend (S)
-			XresD[j].extend (D)
+			XS[j].extend (S)
+			XD[j].extend (D)
 			(S, D) = transfoDN (Y[j][i:i+16], matrix)
-			YresS[j].extend (S)
-			YresD[j].extend (D)
+			YS[j].extend (S)
+			YD[j].extend (D)
 			(S, D) = transfoDN (Z[j][i:i+16], matrix)
-			ZresS[j].extend (S)
-			ZresD[j].extend (D)
-		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
+			ZS[j].extend (S)
+			ZD[j].extend (D)
+		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(height) + "  ")
 
 	new_width = new_width // 2
 	# On divise l'image dans le sens de la hauteur avec  la methode deflate
 	print ("[+] Apply D" + str(deflate) + " on image - vertically - Average")
-	(XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D) = compression_vert (XresS, YresS, ZresS, new_width, new_height, matrix)
-	print ("[+] Apply D" + str(deflate) + " on image - horizontally - Difference") 
-	(XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D) = compression_vert (XresD, YresD, ZresD, new_width, new_height, matrix)
+	(XSS, YSS, ZSS, XSD, YSD, ZSD) = compression_vert (XS, YS, ZS, new_width, new_height, matrix)
+	print ("[+] Apply D" + str(deflate) + " on image - vertically - Difference") 
+	(XDS, YDS, ZDS, XDD, YDD, ZDD) = compression_vert (XD, YD, ZD, new_width, new_height, matrix)
 
 	new_height = new_height // 2
 
@@ -143,71 +153,76 @@ def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 	if deflate == 2:
 		for i in range (new_width) :
 			for j in range (new_height) :
-				if math.fabs(XSres2D[j][i]) <= error :
-					XSres2D[j][i] = 0
+				if math.fabs(XSD[j][i]) <= error :
+					XSD[j][i] = 0
 					counter += 1
-				if math.fabs(YSres2D[j][i]) <= error :
-					YSres2D[j][i] = 0
+				if math.fabs(YSD[j][i]) <= error :
+					YSD[j][i] = 0
 					counter += 1
-				if math.fabs(ZSres2D[j][i]) <= error :
-					ZSres2D[j][i] = 0
+				if math.fabs(ZSD[j][i]) <= error :
+					ZSD[j][i] = 0
 					counter += 1
-				if math.fabs(XDres2D[j][i]) <= error :
-					XDres2D[j][i] = 0
+				if math.fabs(XDD[j][i]) <= error :
+					XDD[j][i] = 0
 					counter += 1
-				if math.fabs(YDres2D[j][i]) <= error :
-					YDres2D[j][i] = 0
+				if math.fabs(YDD[j][i]) <= error :
+					YDD[j][i] = 0
 					counter += 1
-				if math.fabs(ZDres2D[j][i]) <= error :
-					ZDres2D[j][i] = 0
+				if math.fabs(ZDD[j][i]) <= error :
+					ZDD[j][i] = 0
 					counter += 1
 	elif deflate == 4:
 		for i in range (new_width) :
 			for j in range (new_height) :
 
-				#if math.fabs(XSres2D[j][i]) <= error :
-				#	XSres2D[j][i] = 0
+				#if math.fabs(XSD[j][i]) <= error :
+				#	XSD[j][i] = 0
 				#	counter += 1
-				#if math.fabs(YSres2D[j][i]) <= error :
-				#	YSres2D[j][i] = 0
+				#if math.fabs(YSD[j][i]) <= error :
+				#	YSD[j][i] = 0
 				#	counter += 1
-				#if math.fabs(ZSres2D[j][i]) <= error :
-				#	ZSres2D[j][i] = 0
+				#if math.fabs(ZSD[j][i]) <= error :
+				#	ZSD[j][i] = 0
 				#	counter += 1
-				if math.fabs(XDres2D[j][i]) <= error :
-					XDres2D[j][i] = 0
+				if math.fabs(XDD[j][i]) <= error :
+					XDD[j][i] = 0
 					counter += 1
-				if math.fabs(YDres2D[j][i]) <= error :
-					YDres2D[j][i] = 0
+				if math.fabs(YDD[j][i]) <= error :
+					YDD[j][i] = 0
 					counter += 1
-				if math.fabs(ZDres2D[j][i]) <= error :
-					ZDres2D[j][i] = 0
+				if math.fabs(ZDD[j][i]) <= error :
+					ZDD[j][i] = 0
 					counter += 1
 
 	print ("[?] Number of filtered value " + str (counter))
 
-	return XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height
+	img_diff = (XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD)
+	return XSS, YSS, ZSS, img_diff, new_width, new_height, counter
 
 
+def decompression (XSS, YSS, ZSS, img_diff, size, img_name, deflate, yuv, err) :
 
-def decompression (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, img_name, deflate, yuv, err) :
+	# Extraction des donnees
+	XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD = img_diff
+	new_width, new_height = size
 
 	# Creation de la matrice avec la methode deflate TODO
 	matrix = matrixDN(deflate, 16)
 
 	# Reconstruction de l'image
-	print ("[+] Rebuild image")
+	print ("\n{ Rebuild image }")
 	matrix = matrixDN_inv (matrix)
 
 	# Reconstruction verticale
 	print ("[+] Inflate vertically - Average")
-	(XfinS, YfinS, ZfinS, w, h) = inflate_vert (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, new_width, new_height, matrix) 
+	(XS, YS, ZS, w, h) = inflate_vert (XSS, YSS, ZSS, XSD, YSD, ZSD, new_width, new_height, matrix) 
 	print ("[+] Inflate vertically - Difference")
-	(XfinD, YfinD, ZfinD, w, h) = inflate_vert (XDres2S, YDres2S, ZDres2S, XDres2D, YDres2D, ZDres2D, new_width, new_height, matrix) 
+	(XD, YD, ZD, w, h) = inflate_vert (XDS, YDS, ZDS, XDD, YDD, ZDD, new_width, new_height, matrix) 
 
-	print ("[+] Create new image " + str(w) + "x" + str(h))
-	create_image ("" + img_name + "_D" + str(deflate) + "tmp_" + str(error), w, h, XfinS, YfinS, ZfinS, yuv)
+	#print ("[+] Create new image " + str(w) + "x" + str(h))
+	#create_image ("" + img_name + "_D" + str(deflate) + "tmp_" + str(error), w, h, XS, YS, ZS, yuv)
 
+	print ("[+] Inflate horizontally")
 	# Reconstruction horizontale
 	X = [[0 for i in range (w * 2)] for j in range (h)]
 	Y = [[0 for i in range (w * 2)] for j in range (h)]
@@ -215,28 +230,28 @@ def decompression (XSres2S, YSres2S, ZSres2S, XSres2D, YSres2D, ZSres2D, XDres2S
 
 	for j in range (h) :
 		for i in range (0, w, 8) :
-			S = XfinS[j][i:i+8]
-			D = XfinD[j][i:i+8]
+			S = XS[j][i:i+8]
+			D = XD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoDN (S, matrix)
 			S.extend (D)
 			for k in range (16): 
 				X[j][i*2 + k] = S[k]
-			S = YfinS[j][i:i+8]
-			D = YfinD[j][i:i+8]
+			S = YS[j][i:i+8]
+			D = YD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoDN (S, matrix)
 			S.extend (D)
 			for k in range (16): 
 				Y[j][i*2 + k] = S[k]
-			S = ZfinS[j][i:i+8]
-			D = ZfinD[j][i:i+8]
+			S = ZS[j][i:i+8]
+			D = ZD[j][i:i+8]
 			S.extend (D)
 			S, D = transfoDN (S, matrix)
 			S.extend (D)
 			for k in range (16): 
 				Z[j][i*2 + k] = S[k]
-		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
+		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(height) + "  ")
 
 	return (X, Y, Z, w * 2, h)
 
@@ -272,10 +287,10 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 			Xres[j].extend (transfoDN_light (X[j][i:i+16], matrix))
 			Yres[j].extend (transfoDN_light (Y[j][i:i+16], matrix))
 			Zres[j].extend (transfoDN_light (Z[j][i:i+16], matrix))
-		if j % 100 == 0 : print ("[!] processing... " + str (j) + "/" + str(height) + "  ")
+		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(height) + "  ")
 
 	new_width = new_width // 2
-	# On divise l'image dans le sens de la hauteur avec  la methode deflate
+	# On divise l'image dans le sens de la hauteur avec la methode deflate
 	print ("[+] Apply D" + str(deflate) + " on image - vertically")
 	Xres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
 	Yres2 = [[0 for i in range (new_width)] for j in range (new_height//2)]
@@ -291,7 +306,7 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 			s = transfoDN_light ([Zres[j+k][i] for k in range (0, 16)], matrix)
 			for k in range (8): Zres2[j//2+k][i] = s[k]
 
-		if i % 100 == 0 : print ("[!] processing... " + str (i) + "/" + str(new_width) + "  ")
+		if i % 100 == 0 : print ("    processing... " + str (i) + "/" + str(new_width) + "  ")
 
 	new_height = new_height // 2
 	print ("[+] Create new image " + str(new_width) + "x" + str(new_height))
@@ -428,5 +443,5 @@ if __name__ == '__main__':
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 
 	elif mode == "c":
-		donnees = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
 
