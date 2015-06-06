@@ -10,8 +10,6 @@ def create_image (img_name, width, height, X, Y, Z, yuv):
 	# Creation de l'image
 	img = Image.new ("RGB", (width, height), "black")
 
-	print("-----", width, height)
-
 	if yuv == True :
 		# On retrouve les valeurs RGB a partir des couleurs YUV
 		for i in range (width) :

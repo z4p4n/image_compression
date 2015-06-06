@@ -98,7 +98,7 @@ def comp_file(filename):
     cont2 = []
     for i in range(len(content)):
         cont2.append(int(content[i]))
-    content = [str(i) for i in cont2]
+    content = [i for i in cont2]
     
     # On recupere la frequence des caracteres
     freq = getfreq(content)
@@ -138,6 +138,6 @@ def decomp_file(filename):
 
 if __name__ == "__main__" :
 
-    #comp_file("ile_de_la_cite2_D2_E20_P_2.rle")
-    decomp_file("ile_de_la_cite2_D2_E20_P_2.wvl")
+    comp_file("ile_de_la_cite2_D2_E0_P_5.rle")
+    decomp_file("ile_de_la_cite2_D2_E0_P_5.wvl")
 

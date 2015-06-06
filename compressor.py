@@ -213,7 +213,7 @@ def decompression (XSS, YSS, ZSS, img_diff, size, img_name, deflate, yuv, err) :
 	XSD, YSD, ZSD, XDS, YDS, ZDS, XDD, YDD, ZDD = img_diff
 	new_width, new_height = size
 
-	# Creation de la matrice avec la methode deflate TODO
+	# Creation de la matrice avec la methode deflate
 	matrix = matrixDN(deflate, 16)
 
 	# Reconstruction de l'image
@@ -258,7 +258,7 @@ def decompression (XSS, YSS, ZSS, img_diff, size, img_name, deflate, yuv, err) :
 			S.extend (D)
 			for k in range (16): 
 				Z[j][i*2 + k] = S[k]
-		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(height) + "  ")
+		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(h) + "  ")
 
 	return (X, Y, Z, w * 2, h)
 
@@ -396,6 +396,7 @@ def create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err):
     fd = open(filename + ".tmp", 'wb')
 
     # Ecriture de l'en-tete
+    print(X)
     fd.write(len(X).to_bytes(2, "big"))
     fd.write(len(X[0]).to_bytes(2, "big"))
     # Depth
@@ -457,13 +458,12 @@ def decomp_file(filename):
     # -Y (chaque cellule de la matrice sera code sur 1 octet)
     # -Z (chaque cellule de la matrice sera code sur 1 octet)
 
-    if not filename[len(filename) - 3:] == 'wvl': return None
 
     # Decompression
-    huffman.decomp_file(filename)
-    os.system("./rle -d " + filename[0:len(filename) - 3] + "rle2 " + filename[0:len(filename) - 3] + ".tmp2")
+    #huffman.decomp_file(filename)
+    os.system("./rle -d " + filename + ".rle " + filename + ".tmp2")
 
-    fd = open(filename[0:len(filename) - 3] + ".tmp2", 'rb')
+    fd = open(filename + ".tmp2", 'rb')
     height = int.from_bytes(fd.read(2), 'big')
     width  = int.from_bytes(fd.read(2), 'big')
     depth  = int.from_bytes(fd.read(1), 'big')
@@ -543,7 +543,8 @@ def decomp_file(filename):
 def usage():
     print("Usage: python3 compressor.py [df:hyc:se:]")
     print("   -c: compression")
-    print("   -b: decompression")
+    print("   -w: compression avec création de fichier")
+    print("   -u: decompression de fichier")
     print("   -f: fichier (obligatoire)")
     print("   -d: division de l'image")
     print("   -s: séparation YUV")
@@ -630,8 +631,9 @@ if __name__ == '__main__':
 		sys.exit(2)
 
 	# lecture de l'image
-	(width, height), X, Y, Z = read_image(img_name, yuv);
-	print ("[+] Read image : " + img_name +" "+str(width)+"x"+str(height))
+	if not mode == 'u':
+		(width, height), X, Y, Z = read_image(img_name, yuv);
+		print ("[+] Read image : " + img_name +" "+str(width)+"x"+str(height))
 
 	# On enleve l'extension du nom de l'image
 	img_name = '.'.join(img_name.split('.')[:-1])
@@ -647,14 +649,18 @@ if __name__ == '__main__':
 	elif mode == "d":
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 
+	elif mode == "w":
+		if (width // 2**depth < 16) or (height // 2**depth < 16):
+			print("[!] Erreur: la profondeur de compression est trop grande pour l'image");
+		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		print("\n[+] Creation des fichiers")
+		create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err)
+
 	elif mode == "c":
+		if (width // 2**depth < 16) or (height // 2**depth < 16):
+			print("[!] Erreur: la profondeur de compression est trop grande pour l'image");
 		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
 		decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err)
-
-	elif mode == "w":
-		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
-		print("[+] Creation des fichiers")
-		create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err)
 
 	elif mode == "u":
 		X, Y, Z, depth, data, img_name, deflate, yuv, err = decomp_file(img_name)
