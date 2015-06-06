@@ -7,11 +7,14 @@
 # z4p4n, NexMat
 
 # Importations
+import os
 import math
 import numpy as np
 import getopt, sys
+import huffman as huff
 from img_compute import *
 from DN import *
+
 
 def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 
@@ -19,9 +22,17 @@ def inflate_vert (XS, YS, ZS, XD, YD, ZD, width, height, matrix) :
 	Y = [[0 for i in range (width)] for j in range (height * 2)]
 	Z = [[0 for i in range (width)] for j in range (height * 2)]
 
+	width = len(XS[0])
+	height = len(XS)
+
 	for i in range (width) :
 		for j in range (0, height, 8) :
-			S = [XS[j+k][i] for k in range (8)]
+			try:
+				S = [XS[j+k][i] for k in range (8)]
+			except:
+				print ("len : ", len (XS[0]), len (XS))
+				print(">", j+k, i, width, height) #15 96 104 64
+				sys.exit(0)
 			D = [XD[j+k][i] for k in range (8)]
 			S.extend (D)
 			S, D = transfoDN (S, matrix)
@@ -92,27 +103,19 @@ def compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, err)
 		print ("\n{Round " + str (i) + "}")
 		X, Y, Z, img_diff, width, height, gain = compression (X, Y, Z, width, height, img_name, deflate, yuv, err)
 
-		# Sauvegarde du nombre de pixels compressees
+		# Sauvegarde du nombre de pixels compresses
 		counter += gain
 
 		data.append([img_diff, (width, height)])
-
-	# Decompression de l'image
-	for i in range (depth - 1, -1, -1):
-
-		X, Y, Z, width, height = decompression (X, Y, Z, data[i][0], data[i][1], img_name, deflate, yuv, err)
-
-		print ("[+] Create new image " + str(width) + "x" + str(height))
-		format = ''
-		if (yuv == True) : format = 'yuv' 
-		else : format = 'rgb'
-		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth + 1) + "." + str(i) + "_" + format, width, height, X, Y, Z, yuv)
-
+	
 	print ("\n[?] Compressed pixels : " + str (counter))
+
+	return X, Y, Z, depth, data, img_name, deflate, yuv, err
+
 
 def compression (X, Y, Z, width, height, img_name, deflate, yuv, err) :
 
-	# Pour le moment on fait facile modulo 16 bits TODO
+	# Pour le moment on fait facile modulo 16 bits
 	new_width  = width  - width % 16
 	new_height = height - height % 16
 
@@ -260,6 +263,20 @@ def decompression (XSS, YSS, ZSS, img_diff, size, img_name, deflate, yuv, err) :
 	return (X, Y, Z, w * 2, h)
 
 
+def decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err):
+
+	# Decompression de l'image
+	for i in range (depth - 1, -1, -1):
+
+		X, Y, Z, width, height = decompression (X, Y, Z, data[i][0], data[i][1], img_name, deflate, yuv, err)
+
+		print ("[+] Create new image " + str(width) + "x" + str(height))
+		format = ''
+		if (yuv == True) : format = 'yuv' 
+		else : format = 'rgb'
+		create_image ("" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth) + "." + str(i + 1) + "_" + format, width, height, X, Y, Z, yuv)
+
+
 def divide (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	i = 2
@@ -270,7 +287,7 @@ def divide (X, Y, Z, width, height, img_name, deflate, yuv) :
 		i += 1
 
 
-def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
+def divide_img(X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	# Pour le moment on fait facile modulo 16 bits TODO
 	new_width  = width  - width % 16
@@ -292,6 +309,9 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 			Yres[j].extend (transfoDN_light (Y[j][i:i+16], matrix))
 			Zres[j].extend (transfoDN_light (Z[j][i:i+16], matrix))
 		if j % 100 == 0 : print ("    processing... " + str (j) + "/" + str(height) + "  ")
+
+	# Création d'une image intermediaire
+	create_image ("Divide/" + img_name + "_div_intermediaire", new_width // 2, height, Xres, Yres, Zres, yuv)
 
 	new_width = new_width // 2
 	# On divise l'image dans le sens de la hauteur avec la methode deflate
@@ -318,7 +338,8 @@ def divide_img (X, Y, Z, width, height, img_name, deflate, yuv) :
 
 	return (Xres2, Yres2, Zres2, new_width, new_height)
 
-def cutfirstbit (Y, U, V, width, height, n, img_name):
+
+def cutfirstbit(Y, U, V, width, height, n, img_name):
 
 	print ("[+] convert YUV to byte")
 	for i in range (width) :
@@ -340,29 +361,200 @@ def cutfirstbit (Y, U, V, width, height, n, img_name):
 	create_image (img_name + "_cut" + str (n) + "bit", width, height, Y, U, V, True)
 
 
-def splitYUV (Y, U, V, width, height, img_name):
+def splitYUV(Y, U, V, width, height, img_name):
 
-	print ("[+] Create empty matrix")
-	emptymat = [[0 for i in range(width)] for j in range (height)];
+    print ("[+] Create empty matrix")
+    emptymat = [[0 for i in range(width)] for j in range (height)];
+    
+    # Creation des trois images
+    print ("[+] Create Y version")
+    create_image("YUV/" + img_name + "_Y", width, height, Y, emptymat, emptymat, True)
+    print ("[+] Create U version")
+    create_image("YUV/" + img_name + "_U", width, height, emptymat, U, emptymat, True)
+    print ("[+] Create V version")
+    create_image("YUV/" + img_name + "_V", width, height, emptymat, emptymat, V, True)
 
-	# Creation des trois images
-	print ("[+] Create Y version")
-	create_image("YUV/" + img_name + "_Y", width, height, Y, emptymat, emptymat, True)
-	print ("[+] Create U version")
-	create_image("YUV/" + img_name + "_U", width, height, emptymat, U, emptymat, True)
-	print ("[+] Create V version")
-	create_image("YUV/" + img_name + "_V", width, height, emptymat, emptymat, V, True)
+
+def create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err):
+    filename = "" + img_name + "_D" + str(deflate) + "_E" + str(error) + "_P_" + str(depth)
+
+    # Creation d'un en-tete:
+    # -len(X) = len(Y) = len(Z), len(X[0]) = len(Y[0]) = len(Z[0]), sur 2 octets chacun
+    # -depth (= len(data)) sur 1 octet
+    # -len(img_name) sur 1 octet
+    # -deflate sur 1 octet
+    # -yuv sur 1 octet
+    # -err sur 2 octet
+    # Ecriture des donnees:
+    # -img_name
+    # -X (chaque cellule de la matrice sera code sur 1 octet)
+    # -Y (chaque cellule de la matrice sera code sur 1 octet)
+    # -Z (chaque cellule de la matrice sera code sur 1 octet)
+    # -data[0] à data[n]
+
+    # Ouverture du fichier
+    fd = open(filename + ".tmp", 'wb')
+
+    # Ecriture de l'en-tete
+    fd.write(len(X).to_bytes(2, "big"))
+    fd.write(len(X[0]).to_bytes(2, "big"))
+    # Depth
+    fd.write(depth.to_bytes(1, "big"))
+    # len(img_name)
+    fd.write(len(img_name).to_bytes(2, "big"))
+
+    fd.write(deflate.to_bytes(1, "big"))
+    if yuv: fd.write((1).to_bytes(1, "big"))
+    else  : fd.write((0).to_bytes(1, "big"))
+    fd.write(err.to_bytes(2, "big"))
+
+    # Nom du fichier
+    fd.write(img_name.encode("utf-8"))
+
+    # Ecriture des donnees 
+    for i in range(len(X)):
+        for j in range(len(X[0])):
+            fd.write(int(X[i][j]).to_bytes(1, "big"))
+
+    for i in range(len(Y)):
+        for j in range(len(Y[0])):
+            fd.write(int(Y[i][j]).to_bytes(1, "big"))
+
+    for i in range(len(Z)):
+        for j in range(len(Z[0])):
+            fd.write(int(Z[i][j]).to_bytes(1, "big"))
+
+    # Data
+    for l in range(depth):
+        w, h = data[l][1]
+        fd.write(w.to_bytes(2, "big"))
+        fd.write(h.to_bytes(2, "big"))
+        for k in range(9):
+            for i in range(h):
+                for j in range(w):
+                    fd.write(int(data[l][0][k][i][j]).to_bytes(1, "big", signed = True))
 
 
-def usage ():
-	print("Usage: python3 compressor.py [df:hyc:se:]")
+    fd.close()
+
+    # Compression
+    os.system("./rle -c " + filename + ".tmp " + filename + ".rle")
+
+    huff.comp_file(filename + ".rle")
+
+
+def decomp_file(filename):
+    # Creation d'un en-tete:
+    # -len(X), len(X[0]), len(Y), len(Y[0]), len(Z), len(Z[0]), sur 2 octets chacun
+    # -depth (= len(data)) sur 1 octet
+    # -len(img_name) sur 1 octet
+    # -deflate sur 1 octet
+    # -yuv sur 1 octet
+    # -err sur 2 octet
+    # Ecriture des donnees:
+    # -img_name
+    # -X (chaque cellule de la matrice sera code sur 1 octet)
+    # -Y (chaque cellule de la matrice sera code sur 1 octet)
+    # -Z (chaque cellule de la matrice sera code sur 1 octet)
+
+    if not filename[len(filename) - 3:] == 'wvl': return None
+
+    # Decompression
+    huffman.decomp_file(filename)
+    os.system("./rle -d " + filename[0:len(filename) - 3] + "rle2 " + filename[0:len(filename) - 3] + ".tmp2")
+
+    fd = open(filename[0:len(filename) - 3] + ".tmp2", 'rb')
+    height = int.from_bytes(fd.read(2), 'big')
+    width  = int.from_bytes(fd.read(2), 'big')
+    depth  = int.from_bytes(fd.read(1), 'big')
+    len_img_name = int.from_bytes(fd.read(2), 'big')
+    deflate = int.from_bytes(fd.read(1), 'big')
+    yuv = int.from_bytes(fd.read(1), 'big')
+    yuv = (yuv == 1)
+    err = int.from_bytes(fd.read(2), 'big')
+    img_name = fd.read(len_img_name).decode("utf-8");
+    
+    X = [[j for j in range(width)] for i in range(height)]
+    Y = [[j for j in range(width)] for i in range(height)]
+    Z = [[j for j in range(width)] for i in range(height)]
+
+    for i in range(height):
+        for j in range(width):
+            X[i][j] = int.from_bytes(fd.read(1), 'big')
+            
+    for i in range(height):
+        for j in range(width):
+            Y[i][j] = int.from_bytes(fd.read(1), 'big')
+
+    for i in range(height):
+        for j in range(width):
+            Z[i][j] = int.from_bytes(fd.read(1), 'big')
+
+    # Data
+    data = [None for i in range(depth)]
+    for i in range(depth):
+        w = int.from_bytes(fd.read(2), 'big')
+        h = int.from_bytes(fd.read(2), 'big')
+        data[i] = [None, (w,h)]
+        M0 = [[0 for p in range(w)] for q in range(h)]
+        M1 = [[0 for p in range(w)] for q in range(h)]
+        M2 = [[0 for p in range(w)] for q in range(h)]
+        M3 = [[0 for p in range(w)] for q in range(h)]
+        M4 = [[0 for p in range(w)] for q in range(h)]
+        M5 = [[0 for p in range(w)] for q in range(h)]
+        M6 = [[0 for p in range(w)] for q in range(h)]
+        M7 = [[0 for p in range(w)] for q in range(h)]
+        M8 = [[0 for p in range(w)] for q in range(h)]
+        for j in range(h):
+            for k in range(w):
+                M0[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M1[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M2[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M3[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M4[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M5[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M6[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M7[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        for j in range(h):
+            for k in range(w):
+                M8[j][k] = int.from_bytes(fd.read(1), 'big', signed = True)
+        data[i][0] = (M0, M1, M2, M3, M4, M5, M6, M7, M8)
+
+    fd.close()
+
+
+    return X, Y, Z, depth, data, img_name, deflate, yuv, err
+
+
+def usage():
+    print("Usage: python3 compressor.py [df:hyc:se:]")
+    print("   -c: compression")
+    print("   -b: decompression")
+    print("   -f: fichier (obligatoire)")
+    print("   -d: division de l'image")
+    print("   -s: séparation YUV")
+    print("   -e: seuil d'erreur")
 
 
 if __name__ == '__main__':
 
 	# Recuperation des parametres
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:se:", ["help", "d2", "d4"])
+		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:se:uw", ["help", "d2", "d4"])
 	except getopt.GetoptError as err:
 		print (str(err))
 		usage ()
@@ -423,6 +615,14 @@ if __name__ == '__main__':
 		elif o == "-d":
 			mode = "d"
 
+		# Creation d'un fichier .wvl
+		elif o == "-w":
+			mode = "w"
+
+		# Decompression d'un fichier .wvl
+		elif o == "-u":
+			mode = "u"
+
 	# Si il n'y a pas de fichier a lire ou pas d'option tout simplement
 	if img_name == '' or mode == '':
 		usage()
@@ -447,5 +647,14 @@ if __name__ == '__main__':
 		divide (X, Y, Z, width, height, img_name, deflate, yuv)
 
 	elif mode == "c":
-		compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		print("\n-- Fin de la compression --\n")
+		decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err)
+
+        elif mode == "w":
+		create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err)
+
+        elif mode == "u":
+		X, Y, Z, depth, data, img_name, deflate, yuv, err = decomp_file(img_name)
+		decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err)
 
