@@ -24,18 +24,18 @@ def getdico (prefcode) :
 	dico = {}
 
 
-def aux_getdico (code, val) :
+	def aux_getdico (code, val) :
 
-	if code[2] != '' :
-		dico.update ({val:code[2]})
+		if code[2] != '' :
+			dico.update ({val:code[2]})
 
-	val1 = val + '0'
-	val2 = val + '1'
+		val1 = val + '0'
+		val2 = val + '1'
 
-	if code[3] != [] :
-		aux_getdico (code[3], val1)
-	if code[4] != [] :
-		aux_getdico (code[4], val2)
+		if code[3] != [] :
+			aux_getdico (code[3], val1)
+		if code[4] != [] :
+			aux_getdico (code[4], val2)
 
 	aux_getdico (prefcode, '')
 	return dico
@@ -107,44 +107,55 @@ def comp_file(filename):
 	
 	# Creation du code des prefixes
 	prefcode = getprefcode(freq)
-	
+
 	# Creation du dictionnaire
 	dico = getdico(prefcode)
 	
+	print (dico)
+
 	# Compression du contenu
 	c = compress(dico, content)
+
+	padding = len(c) % 8;
+	for i in range (padding) :
+		c += '1';
+
+	print (c)
 	
 	with open(filename[0:len(filename) - 3] + 'wvl', 'wb') as fd:
 		pickle.dump(dico, fd, protocol=None)
+		fd.write (int (padding).to_bytes(1, "big"))
 		for i in range(0, len(c), 8):
 			fd.write(int(c[i:i+8], 2).to_bytes(1, "big"))
-
 
 def decomp_file(filename):
 
     c = ''
     with open(filename, 'rb') as fd:
         dico = pickle.load(fd)
+        padding = fd.read(1)
         content = fd.read()
         for i in range(len(content)):
             #print(bin(content[i])[2:].zfill(8))
             c += bin(content[i])[2:].zfill(8)
 
-	
-    #print(dico)
-    #print(c)
+    print(dico)
+    print(c)
+    print(c[:len(c) - ord(padding)])
 
+    c = c[:len(c) - ord(padding)];
     # Decompression du contenu
     d = inflate(dico, c)
     
     print(d)
-    #fd = open(filename[0:len(filename) - 3] + 'rle2', 'wb')
-    #fd.write(d)
-    #fd.close()
+    fd = open(filename[0:len(filename) - 3] + 'rle2', 'wb')
+    for i in d :
+        fd.write(i.to_bytes(1, "big"))
+    fd.close()
 
 
 if __name__ == "__main__" :
 
-    comp_file("ile_de_la_cite2_D2_E0_P_5.rle")
-    #decomp_file("ile_de_la_cite2_D2_E0_P_5.wvl")
+    comp_file("test.rle")
+    decomp_file("test.wvl")
 
