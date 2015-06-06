@@ -99,7 +99,6 @@ def comp_file(filename):
     for i in range(len(content)):
         cont2.append(int(content[i]))
     content = [str(i) for i in cont2]
-    print(content)
     
     # On recupere la frequence des caracteres
     freq = getfreq(content)

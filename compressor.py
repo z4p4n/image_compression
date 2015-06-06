@@ -554,7 +554,7 @@ if __name__ == '__main__':
 
 	# Recuperation des parametres
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:se:uw", ["help", "d2", "d4"])
+		opts, args = getopt.getopt(sys.argv[1:], "df:hyc:se:uw:", ["help", "d2", "d4"])
 	except getopt.GetoptError as err:
 		print (str(err))
 		usage ()
@@ -598,7 +598,7 @@ if __name__ == '__main__':
 		# Compression du fichier
 		elif o == "-c":
 			mode = "c"
-			depth = int (a)
+			depth = int(a)
 
 		# Methode de compression 
 		elif o == "--d2":
@@ -609,7 +609,7 @@ if __name__ == '__main__':
 
 		# Niveau d'erreur
 		elif o == "-e":
-			error = int (a)
+			error = int(a)
 
 		# Division de l'image
 		elif o == "-d":
@@ -618,6 +618,7 @@ if __name__ == '__main__':
 		# Creation d'un fichier .wvl
 		elif o == "-w":
 			mode = "w"
+			depth = int(a)
 
 		# Decompression d'un fichier .wvl
 		elif o == "-u":
@@ -648,13 +649,14 @@ if __name__ == '__main__':
 
 	elif mode == "c":
 		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
-		print("\n-- Fin de la compression --\n")
 		decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err)
 
-        elif mode == "w":
+	elif mode == "w":
+		X, Y, Z, depth, data, img_name, deflate, yuv, err = compression_img (X, Y, Z, width, height, img_name, deflate, yuv, depth, error)
+		print("[+] Creation des fichiers")
 		create_file(X, Y, Z, depth, data, img_name, deflate, yuv, err)
 
-        elif mode == "u":
+	elif mode == "u":
 		X, Y, Z, depth, data, img_name, deflate, yuv, err = decomp_file(img_name)
 		decompression_img (X, Y, Z, depth, data, img_name, deflate, yuv, err)
 
